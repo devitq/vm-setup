@@ -1,0 +1,22 @@
+---
+- name: Configure sysctl parameters
+  ansible.builtin.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: true
+  loop: "{{ sysctl_tuning | dict2items }}"
+  tags: optimization
+
+- name: Configure file handle limits
+  ansible.builtin.lineinfile:
+    path: /etc/security/limits.conf
+    regexp: "^{{ item.user | regex_escape }}.*{{ item.type }}"
+    line: "{{ item.user }} - nofile {{ item.limit }}"
+    create: true
+  loop:
+    - {user: "root", type: "soft", limit: "65536"}
+    - {user: "root", type: "hard", limit: "65536"}
+    - {user: "*", type: "soft", limit: "65536"}
+    - {user: "*", type: "hard", limit: "65536"}
+  tags: limits

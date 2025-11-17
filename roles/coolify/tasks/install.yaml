@@ -1,0 +1,111 @@
+---
+- name: Install prerequisites (apt)
+  ansible.builtin.apt:
+    name:
+      - curl
+      - openssl
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  tags: coolify, prerequisites, installation
+
+- name: Ensure Docker service is started and enabled
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+  tags: coolify, docker, installation
+
+- name: Create Coolify directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ coolify_owner }}"
+    group: "{{ coolify_group }}"
+    mode: '0750'
+  loop:
+    - "{{ coolify_base_dir }}/source"
+    - "{{ coolify_base_dir }}/ssh/keys"
+    - "{{ coolify_base_dir }}/ssh/mux"
+    - "{{ coolify_base_dir }}/applications"
+    - "{{ coolify_base_dir }}/databases"
+    - "{{ coolify_base_dir }}/backups"
+    - "{{ coolify_base_dir }}/services"
+    - "{{ coolify_base_dir }}/proxy/dynamic"
+    - "{{ coolify_base_dir }}/webhooks-during-maintenance"
+  tags: coolify, files, installation
+
+- name: Download Coolify configuration files
+  ansible.builtin.get_url:
+    url: "https://cdn.coollabs.io/coolify/{{ item.file }}"
+    dest: "{{ coolify_base_dir }}/source/{{ item.dest }}"
+    mode: '0644'
+  loop:
+    - { file: "docker-compose.yml", dest: "docker-compose.yml" }
+    - { file: "docker-compose.prod.yml", dest: "docker-compose.prod.yml" }
+    - { file: "upgrade.sh", dest: "upgrade.sh" }
+  tags: coolify, files, installation
+
+- name: Ensure .env exists from template (only when missing)
+  ansible.builtin.stat:
+    path: "{{ coolify_base_dir }}/source/.env"
+  register: env_file_check
+  tags: coolify, files, installation
+
+- name: Create .env from template when missing
+  ansible.builtin.template:
+    src: "templates/.env.production.j2"
+    dest: "{{ coolify_base_dir }}/source/.env"
+    mode: '0640'
+  when: not env_file_check.stat.exists
+  tags: coolify, files, installation
+
+- name: Ensure correct ownership and permissions recursively
+  ansible.builtin.file:
+    path: "{{ coolify_base_dir }}"
+    owner: "{{ coolify_owner }}"
+    group: "{{ coolify_group }}"
+    mode: '0750'
+    recurse: true
+  tags: coolify, permissions, installation
+
+- name: Ensure Docker network exists
+  become: true
+  community.docker.docker_network:
+    name: "{{ coolify_docker_network }}"
+    driver: bridge
+    attachable: true
+    state: present
+  tags: coolify, docker, installation
+
+- name: Start Coolify services
+  become: true
+  community.docker.docker_compose_v2:
+    project_src: "{{ coolify_base_dir }}/source"
+    files: "{{ coolify_compose_files }}"
+    pull: always
+    state: present
+    wait: true
+    wait_timeout: 300
+  tags: coolify, docker, installation
+
+- name: Wait for Coolify HTTP to respond
+  ansible.builtin.uri:
+    url: "http://localhost:{{ coolify_http_port }}"
+    method: GET
+    status_code: 200
+    timeout: 30
+    body_format: json
+  register: coolify_health
+  until: coolify_health.status == 200
+  retries: 10
+  delay: 10
+  tags: coolify, health, installation
+
+- name: Show installed message
+  ansible.builtin.debug:
+    msg:
+      - "Coolify installed successfully"
+      - "All containers are healthy and responding"
+      - "Access at: http://{{ ansible_host }}:{{ coolify_http_port }}"
+  tags: coolify, installation

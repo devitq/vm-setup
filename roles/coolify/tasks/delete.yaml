@@ -1,0 +1,120 @@
+---
+- name: Check if Coolify is running before uninstallation
+  community.docker.docker_container_info:
+    name: "{{ item }}"
+  loop: "{{ coolify_container_names }}"
+  register: coolify_containers_pre_uninstall
+  ignore_errors: true
+  tags: coolify, deletion, pre-check
+
+- name: Stop and remove Coolify services (compose down)
+  become: true
+  community.docker.docker_compose_v2:
+    project_src: "{{ coolify_base_dir }}/source"
+    files: "{{ coolify_compose_files }}"
+    state: absent
+    remove_orphans: true
+    remove_volumes: false
+  ignore_errors: true
+  tags: coolify, docker, deletion
+
+- name: Force remove any remaining Coolify containers
+  community.docker.docker_container:
+    name: "{{ item.item }}"
+    state: absent
+    force_kill: true
+    force_remove: true
+  loop: "{{ coolify_containers_pre_uninstall.results }}"
+  when: 
+    - item.exists | default(false)
+    - coolify_remove_data_on_absent | bool
+  ignore_errors: true
+  tags: coolify, docker, deletion
+
+- name: Remove Coolify files and data (conditional)
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ coolify_base_dir }}/source"
+    - "{{ coolify_base_dir }}/applications"
+    - "{{ coolify_base_dir }}/databases"
+    - "{{ coolify_base_dir }}/backups"
+    - "{{ coolify_base_dir }}/services"
+    - "{{ coolify_base_dir }}/proxy"
+    - "{{ coolify_base_dir }}/webhooks-during-maintenance"
+    - "{{ coolify_base_dir }}/ssh"
+    - "{{ coolify_base_dir }}/sentinel"
+  when: coolify_remove_data_on_absent | bool
+  tags: coolify, files, deletion, data
+
+- name: Remove base directory if empty (only when requested)
+  ansible.builtin.file:
+    path: "{{ coolify_base_dir }}"
+    state: absent
+  when: coolify_remove_data_on_absent | bool
+  tags: coolify, files, deletion, data
+
+- name: Remove Coolify docker volumes (find)
+  community.docker.docker_volume_info:
+    name: "^coolify_.*"
+  register: coolify_volumes
+  ignore_errors: true
+  when: coolify_remove_data_on_absent | bool
+  tags: coolify, docker, deletion
+
+- name: Remove Coolify docker volumes
+  community.docker.docker_volume:
+    name: "{{ item.Name }}"
+    state: absent
+    force: true
+  loop: "{{ coolify_volumes.volumes | default([]) }}"
+  when: coolify_volumes is defined and coolify_volumes.volumes | length > 0
+  tags: coolify, docker, deletion
+
+- name: Remove Coolify docker network
+  community.docker.docker_network:
+    name: "{{ coolify_docker_network }}"
+    state: absent
+    force: "{{ coolify_remove_data_on_absent | bool }}"
+  ignore_errors: true
+  when: coolify_remove_data_on_absent | bool
+  tags: coolify, docker, deletion
+
+- name: Prune Coolify images
+  become: true
+  community.docker.docker_prune:
+    images: true
+    images_filters:
+      reference: "ghcr.io/coollabsio/*"
+    build_cache: true
+  ignore_errors: true
+  when: coolify_remove_data_on_absent | bool
+  tags: coolify, docker, deletion
+
+- name: Prune unused Docker resources
+  become: true
+  community.docker.docker_prune:
+    containers: true
+    images: false
+    networks: true
+    volumes: false
+    builder_cache: true
+  ignore_errors: true
+  when: coolify_remove_data_on_absent | bool
+  tags: coolify, docker, deletion
+
+- name: Verify Coolify removal
+  community.docker.docker_container_info:
+    name: "{{ item }}"
+  loop: "{{ coolify_container_names }}"
+  register: coolify_containers_post_uninstall
+  ignore_errors: true
+  tags: coolify, deletion, verification
+
+- name: Display uninstallation message
+  ansible.builtin.debug:
+    msg:
+      - "Coolify has been uninstalled"
+      - "Application data preserved: {{ not coolify_remove_data_on_absent }}"
+  tags: coolify, deletion

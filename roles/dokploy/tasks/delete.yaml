@@ -1,0 +1,55 @@
+---
+- name: Remove Dokploy services
+  become: true
+  community.docker.docker_swarm_service:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - dokploy-traefik
+    - dokploy
+    - dokploy-redis
+    - dokploy-postgres
+  ignore_errors: true
+  tags: dokploy, deletion
+
+- name: Leave Docker Swarm
+  become: true
+  community.docker.docker_swarm:
+    state: absent
+  ignore_errors: true
+  tags: dokploy, deletion
+
+- name: Remove Dokploy network
+  become: true
+  community.docker.docker_network:
+    name: "{{ dokploy_docker_network }}"
+    state: absent
+  ignore_errors: true
+  tags: dokploy, deletion
+
+- name: Remove Dokploy configuration directory
+  ansible.builtin.file:
+    path: "{{ dokploy_config_dir }}"
+    state: absent
+  when: dokploy_remove_data_on_absent | bool
+  tags: dokploy, deletion, files
+
+- name: Remove Dokploy volumes
+  become: true
+  community.docker.docker_volume:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - dokploy-postgres-database
+    - redis-data-volume
+    - dokploy-docker-config
+  when: dokploy_remove_data_on_absent | bool
+  ignore_errors: true
+  tags: dokploy, deletion, volumes
+
+- name: Display uninstallation message
+  ansible.builtin.debug:
+    msg:
+      - "Dokploy has been uninstalled"
+      - "Application data preserved: {{ not dokploy_remove_data_on_absent }}"
+  tags: dokploy, deletion

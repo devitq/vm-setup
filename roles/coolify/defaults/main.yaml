@@ -1,0 +1,19 @@
+---
+coolify_state: present  # latest | present | absent
+coolify_remove_data_on_absent: false
+coolify_base_dir: /data/coolify
+
+coolify_docker_network: coolify
+coolify_http_port: 8000
+
+coolify_owner: 9999
+coolify_group: root
+coolify_compose_files:
+  - docker-compose.yml
+  - docker-compose.prod.yml
+
+coolify_container_names:
+  - coolify
+  - coolify-db
+  - coolify-redis
+  - coolify-realtime

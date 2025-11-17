@@ -1,0 +1,34 @@
+#!/usr/sbin/nft -f
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0;
+        policy {{ security_firewall_default_policy | default('drop') }};
+
+        ct state established,related accept
+        iifname lo accept
+
+        # allow ICMP
+        ip protocol icmp icmp type { echo-request, echo-reply, destination-unreachable, time-exceeded } accept
+        ip6 nexthdr icmpv6 icmpv6 type { echo-request, echo-reply, destination-unreachable, packet-too-big, time-exceeded, parameter-problem } accept
+
+{% for p in security_firewall_allowed_ports %}
+{% set parts = p.split('/') %}
+{% set port = parts[0] %}
+{% set proto = parts[1] if parts|length > 1 else 'tcp' %}
+        {{ proto }} dport {{ port }} accept
+{% endfor %}
+
+        reject with icmpx type port-unreachable
+    }
+
+    chain forward {
+        type filter hook forward priority 0;
+        policy accept;
+    }
+
+    chain output {
+        type filter hook output priority 0;
+        policy accept;
+    }
+}

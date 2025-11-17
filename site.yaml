@@ -1,0 +1,12 @@
+---
+- name: Import base system setup
+  ansible.builtin.import_playbook: base_setup.yaml
+
+- name: Import Docker setup
+  ansible.builtin.import_playbook: docker.yaml
+
+- name: Import application deployment
+  ansible.builtin.import_playbook: apps.yaml
+
+- name: Import post-deployment validation
+  ansible.builtin.import_playbook: validation.yaml

@@ -1,0 +1,17 @@
+---
+docker_edition: "ce"
+docker_install_compose_plugin: true
+docker_users:
+  - "{{ ansible_user }}"
+docker_daemon_options:
+  storage-driver: "overlay2"
+
+  log-driver: "json-file"
+  log-opts:
+    max-size: "50m"
+    max-file: "5"
+
+  live-restore: false
+  icc: false
+  userland-proxy: false
+  default-address-pools: [{"base": "10.200.0.0/16", "size": 24}]

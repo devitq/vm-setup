@@ -1,0 +1,15 @@
+# Ansible Galaxy roles
+external_roles/*
+
+# Python files
+__pycache__/
+
+# dotenv file
+.env
+
+# Inventory
+inventory/host_vars/*
+inventory/hosts
+
+# Unignore .gitkeep files
+!.gitkeep

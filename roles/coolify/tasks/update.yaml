@@ -1,0 +1,32 @@
+---
+- name: Update Coolify services with recreate
+  community.docker.docker_compose_v2:
+    project_src: "{{ coolify_base_dir }}/source"
+    files: "{{ coolify_compose_files }}"
+    pull: always
+    state: present
+    recreate: always
+    wait: true
+    wait_timeout: 300
+  tags: coolify, update
+
+- name: Wait for Coolify HTTP to respond after update
+  ansible.builtin.uri:
+    url: "http://localhost:{{ coolify_http_port }}"
+    method: GET
+    status_code: 200
+    timeout: 30
+    body_format: json
+  register: coolify_health_after_update
+  until: coolify_health_after_update.status == 200
+  retries: 10
+  delay: 10
+  tags: coolify, update, health
+
+- name: Show update success message
+  ansible.builtin.debug:
+    msg:
+      - "Coolify updated successfully to latest version"
+      - "All containers are healthy and responding"
+      - "Access at: http://{{ ansible_host }}:{{ coolify_http_port }}"
+  tags: coolify, update

@@ -1,0 +1,25 @@
+---
+- name: Validate dokploy_state parameter
+  ansible.builtin.assert:
+    that:
+      - dokploy_state in ['present', 'absent', 'latest']
+    msg: "dokploy_state must be one of: present, absent, latest"
+  tags: always
+
+- name: Check if Dokploy services exist
+  become: true
+  community.docker.docker_swarm_service_info:
+    name: dokploy
+  register: dokploy_services
+  ignore_errors: true
+  tags: always
+
+- name: Include deletion tasks if state is absent
+  ansible.builtin.include_tasks: delete.yaml
+  when: dokploy_state == 'absent'
+  tags: dokploy, deletion
+
+- name: Include installation/update tasks when desired
+  ansible.builtin.include_tasks: install.yaml
+  when: dokploy_state in ['present', 'latest']
+  tags: dokploy, installation

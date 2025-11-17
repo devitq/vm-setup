@@ -1,0 +1,51 @@
+---
+- name: Validate coolify_state parameter
+  ansible.builtin.assert:
+    that:
+      - coolify_state in ['present', 'absent', 'latest']
+    msg: "coolify_state must be one of: present, absent, latest"
+  tags: always
+
+- name: Check if Coolify is installed (compose file exists)
+  ansible.builtin.stat:
+    path: "{{ coolify_base_dir }}/source/{{ coolify_compose_files[0] }}"
+  register: coolify_installed
+  tags: always
+
+- name: Check Coolify container status
+  community.docker.docker_container_info:
+    name: "{{ item }}"
+  loop: "{{ coolify_container_names }}"
+  register: coolify_containers
+  when: coolify_installed.stat.exists
+  tags: always
+
+- name: Set Coolify health fact
+  ansible.builtin.set_fact:
+    coolify_healthy: "{{ coolify_containers.results | selectattr('container', 'defined') | selectattr('container.State.Health.Status', 'defined') | selectattr('container.State.Health.Status', 'equalto', 'healthy') | list | length == coolify_container_names | length }}"
+  when: coolify_containers is defined and coolify_containers.results is defined
+  tags: always
+
+- name: Include deletion tasks if state is absent
+  ansible.builtin.include_tasks: delete.yaml
+  when: coolify_state == 'absent'
+  tags: coolify, deletion
+
+- name: Include installation tasks when desired and not installed
+  ansible.builtin.include_tasks: install.yaml
+  when: (coolify_state in ['present','latest']) and not coolify_installed.stat.exists
+  tags: coolify, installation
+
+- name: Include update tasks when latest requested and already installed
+  ansible.builtin.include_tasks: update.yaml
+  when: (coolify_state == 'latest') and coolify_installed.stat.exists
+  tags: coolify, update
+
+- name: Show status when present and already installed
+  ansible.builtin.debug:
+    msg:
+      - "Coolify is already installed and running"
+      - "Containers healthy: {{ coolify_healthy | default('unknown') }}"
+      - "Access at: http://{{ ansible_host }}:{{ coolify_http_port }}"
+  when: (coolify_state == 'present') and coolify_installed.stat.exists | default(false)
+  tags: coolify, status

@@ -1,0 +1,33 @@
+---
+system_packages:
+  essential:
+    - curl
+    - wget
+    - git
+    - htop
+    - vim
+    - gnupg
+    - ca-certificates
+    - apt-transport-https
+    - software-properties-common
+    - iproute2
+    - net-tools
+    - unzip
+    - jq
+    - tree
+    - bash-completion
+    - tmux
+    - rsync
+    - python3-docker
+    - borgbackup
+  monitoring:
+    - atop
+    - iotop
+    - nethogs
+    - nload
+    - sysstat
+    - dstat
+    - smartmontools
+  security:
+    - fail2ban
+    - nftables
