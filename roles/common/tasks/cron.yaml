@@ -1,0 +1,9 @@
+---
+- name: Create cron job to prune journald logs with configurable limits
+  ansible.builtin.cron:
+    name: "Prune systemd journal logs ({{ journal_retention_days }} days, {{ journal_max_disk_limit }} disk)"
+    minute: "0"
+    hour: "2"
+    job: "/usr/bin/journalctl --vacuum-time={{ journal_retention_days }}d --vacuum-size={{ journal_max_disk_limit }} > /dev/null 2>&1"
+    user: root
+    state: present
