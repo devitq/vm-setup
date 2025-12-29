@@ -32,3 +32,7 @@ table inet filter {
         policy accept;
     }
 }
+
+{% if security_nftables_custom_config is defined and security_nftables_custom_config | trim %}
+{{ security_nftables_custom_config | trim }}
+{% endif %}

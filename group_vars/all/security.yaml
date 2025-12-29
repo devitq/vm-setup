@@ -7,6 +7,9 @@ security_firewall_allowed_ports:
   - "443/udp"
   - "53/udp"
 
+# Optional per-host nftables additions appended verbatim to the rendered config
+security_nftables_custom_config: ""
+
 security_ssh_port: 2424
 security_fail2ban_enabled: true
 security_fail2ban_custom_configuration_template: "jail.local.j2"
