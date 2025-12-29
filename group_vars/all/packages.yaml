@@ -9,7 +9,6 @@ system_packages:
     - gnupg
     - ca-certificates
     - apt-transport-https
-    - software-properties-common
     - iproute2
     - net-tools
     - unzip
@@ -18,8 +17,7 @@ system_packages:
     - bash-completion
     - tmux
     - rsync
-    - python3-docker
-    - borgbackup
+    - lm-sensors
   monitoring:
     - atop
     - iotop
@@ -28,6 +26,7 @@ system_packages:
     - sysstat
     - dstat
     - smartmontools
+    - tcpdump
   security:
     - fail2ban
     - nftables

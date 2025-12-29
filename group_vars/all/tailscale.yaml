@@ -7,7 +7,7 @@ tailscale_tags: >-
     ['vm'] +
     ([hostname.split('-')[-1]] if '-' in hostname else [])
   }}
-tailscale_args: "--accept-dns=true --accept-routes=false --netfilter-mode on --shields-up=false --ssh=true --stateful-filtering=false"
+tailscale_args: "--accept-dns=true --accept-routes=true --netfilter-mode on --shields-up=false --ssh=true --stateful-filtering=false"
 
 tailscale_oauth_ephemeral: false
 tailscale_oauth_preauthorized: true

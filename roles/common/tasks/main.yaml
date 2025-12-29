@@ -3,6 +3,10 @@
   include_tasks: optimization.yaml
   tags: optimization
 
+- name: Include cron tasks
+  include_tasks: cron.yaml
+  tags: cron
+
 - name: Install essential packages
   ansible.builtin.apt:
     name: "{{ system_packages.essential }}"

@@ -11,6 +11,10 @@ system_locale: en_US.UTF-8
 monitoring_enabled: true
 monitoring_prometheus_node_exporter: true
 
+# Logs
+journal_retention_days: 21
+journal_max_disk_limit: "5%"
+
 # User management
 admin_users:
   - name: "{{ ansible_user }}"
@@ -18,6 +22,15 @@ admin_users:
     shell: /bin/bash
     ssh_keys: "{{ admin_ssh_keys | default([]) }}"
     state: present
+
+# Containers management
+containers:
+  docker:
+    enabled: true
+    state: latest
+  k3s:
+    enabled: false
+    state: absent
 
 # Applications management
 applications:
