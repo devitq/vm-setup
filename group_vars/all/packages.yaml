@@ -4,22 +4,32 @@ system_packages:
     - curl
     - wget
     - git
-    - htop
     - vim
     - gnupg
     - ca-certificates
+    - openssl
     - apt-transport-https
     - iproute2
     - net-tools
     - unzip
-    - jq
     - tree
     - bash-completion
     - tmux
     - rsync
     - lm-sensors
+    - strace
+    - ltrace
+    - lsscsi
+    - lshw
+    - jq
+    - yq
+    - socat
+    - netcat-traditional
+    - vmtouch
   monitoring:
+    - htop
     - atop
+    - psmisc # pstree
     - iotop
     - nethogs
     - nload
@@ -27,6 +37,20 @@ system_packages:
     - dstat
     - smartmontools
     - tcpdump
+    - conntrack
+    - bpftool
+    - bpftrace
+    - bpfcc-tools
+    - nmap
+    - iftop
+    - iperf3
+    - linux-perf
+    - fio
+    - traceroute
+    - mtr
+    - ngrep
+    - tcpflow
   security:
+    - auditd
     - fail2ban
     - nftables
