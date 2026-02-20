@@ -1,5 +1,5 @@
 ---
-coolify_state: present  # latest | present | absent
+coolify_state: present # latest | present | absent
 coolify_remove_data_on_absent: false
 coolify_base_dir: /data/coolify
 
@@ -17,3 +17,22 @@ coolify_container_names:
   - coolify-db
   - coolify-redis
   - coolify-realtime
+
+coolify_app_id: ""
+coolify_app_name: "Coolify"
+coolify_app_key: ""
+
+coolify_db_username: "coolify"
+coolify_db_password: ""
+
+coolify_redis_password: ""
+
+coolify_pusher_app_id: ""
+coolify_pusher_app_key: ""
+coolify_pusher_app_secret: ""
+
+coolify_root_username: ""
+coolify_root_user_email: ""
+coolify_root_user_password: ""
+
+coolify_registry_url: "ghcr.io"

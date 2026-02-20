@@ -1,5 +1,23 @@
 ---
-- name: Update Coolify services with recreate
+- name: Update Coolify configuration files
+  ansible.builtin.get_url:
+    url: "https://cdn.coollabs.io/coolify/{{ item.file }}"
+    dest: "{{ coolify_base_dir }}/source/{{ item.dest }}"
+    mode: "0644"
+    owner: "{{ coolify_owner }}"
+    group: "{{ coolify_group }}"
+  loop:
+    - { file: "docker-compose.yml", dest: "docker-compose.yml" }
+    - { file: "docker-compose.prod.yml", dest: "docker-compose.prod.yml" }
+    - { file: "upgrade.sh", dest: "upgrade.sh" }
+  tags: coolify, files, update
+
+- name: Ensure Coolify environment configuration exists
+  ansible.builtin.include_tasks: configure.yaml
+  tags: coolify, configuration, update
+
+- name: Update Coolify services (pull and recreate)
+  become: true
   community.docker.docker_compose_v2:
     project_src: "{{ coolify_base_dir }}/source"
     files: "{{ coolify_compose_files }}"
@@ -8,7 +26,7 @@
     recreate: always
     wait: true
     wait_timeout: 300
-  tags: coolify, update
+  tags: coolify, docker, update
 
 - name: Wait for Coolify HTTP to respond after update
   ansible.builtin.uri:
@@ -19,14 +37,14 @@
     body_format: json
   register: coolify_health_after_update
   until: coolify_health_after_update.status == 200
-  retries: 10
-  delay: 10
+  retries: 20
+  delay: 15
   tags: coolify, update, health
 
 - name: Show update success message
   ansible.builtin.debug:
     msg:
       - "Coolify updated successfully to latest version"
-      - "All containers are healthy and responding"
+      - "Services have been recreated with latest images and config"
       - "Access at: http://{{ ansible_host }}:{{ coolify_http_port }}"
   tags: coolify, update

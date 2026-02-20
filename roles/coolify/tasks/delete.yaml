@@ -7,16 +7,10 @@
   ignore_errors: true
   tags: coolify, deletion, pre-check
 
-- name: Stop and remove Coolify services (compose down)
-  become: true
-  community.docker.docker_compose_v2:
-    project_src: "{{ coolify_base_dir }}/source"
-    files: "{{ coolify_compose_files }}"
-    state: absent
-    remove_orphans: true
-    remove_volumes: false
+- name: Stop Coolify services
+  ansible.builtin.include_tasks: stop.yaml
   ignore_errors: true
-  tags: coolify, docker, deletion
+  tags: coolify, deletion, stop
 
 - name: Force remove any remaining Coolify containers
   community.docker.docker_container:
@@ -25,7 +19,7 @@
     force_kill: true
     force_remove: true
   loop: "{{ coolify_containers_pre_uninstall.results }}"
-  when: 
+  when:
     - item.exists | default(false)
     - coolify_remove_data_on_absent | bool
   ignore_errors: true
