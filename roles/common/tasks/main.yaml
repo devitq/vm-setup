@@ -3,10 +3,6 @@
   include_tasks: optimization.yaml
   tags: optimization
 
-- name: Include cron tasks
-  include_tasks: cron.yaml
-  tags: cron
-
 - name: Install essential packages
   ansible.builtin.apt:
     name: "{{ system_packages.essential }}"
@@ -66,7 +62,7 @@
         state: "{{ item.state | default('present') }}"
         create_home: true
         home: "/home/{{ item.name }}"
-      loop: "{{ admin_users }}"
+      loop: "{{ admin_users | rejectattr('name', 'equalto', 'root') | list }}"
       tags: users
 
     - name: Deploy SSH authorized keys
@@ -79,3 +75,7 @@
         - "{{ admin_users }}"
         - ssh_keys
       tags: users, ssh
+
+- name: Include cron tasks
+  include_tasks: cron.yaml
+  tags: cron
