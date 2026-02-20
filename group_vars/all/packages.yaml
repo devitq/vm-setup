@@ -26,6 +26,11 @@ system_packages:
     - socat
     - netcat-traditional
     - vmtouch
+    - gdb
+    - gcc
+    - cron
+    - just
+    - bat
   monitoring:
     - htop
     - atop

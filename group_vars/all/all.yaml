@@ -26,8 +26,8 @@ admin_users:
 # Containers management
 containers:
   docker:
-    enabled: true
-    state: latest
+    enabled: false 
+    state: absent
   k3s:
     enabled: false
     state: absent

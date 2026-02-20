@@ -12,9 +12,9 @@ borg_source_directories:
 borg_ssh_key_type: "ed25519"
 borg_retention_policy:
   keep_hourly: 1
-  keep_daily: 1
-  keep_weekly: 1
-  keep_monthly: 3
+  keep_daily: 3
+  keep_weekly: 7
+  keep_monthly: 1
 
 borgmatic_timer_cron_name: "borgmatic"
 borgmatic_timer: cron
