@@ -1,0 +1,20 @@
+---
+- name: Check if Coolify is installed (compose file exists)
+  ansible.builtin.stat:
+    path: "{{ coolify_base_dir }}/source/{{ coolify_compose_files[0] }}"
+  register: coolify_installed
+  tags: always
+
+- name: Check Coolify container status
+  community.docker.docker_container_info:
+    name: "{{ item }}"
+  loop: "{{ coolify_container_names }}"
+  register: coolify_containers
+  when: coolify_installed.stat.exists
+  tags: always
+
+- name: Set Coolify health fact
+  ansible.builtin.set_fact:
+    coolify_healthy: "{{ coolify_containers.results | selectattr('container', 'defined') | selectattr('container.State.Health.Status', 'defined') | selectattr('container.State.Health.Status', 'equalto', 'healthy') | list | length == coolify_container_names | length }}"
+  when: coolify_containers is defined and coolify_containers.results is defined
+  tags: always

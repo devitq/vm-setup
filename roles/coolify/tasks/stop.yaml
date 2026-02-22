@@ -1,0 +1,10 @@
+---
+- name: Stop Coolify services (compose down)
+  become: true
+  community.docker.docker_compose_v2:
+    project_src: "{{ coolify_base_dir }}/source"
+    files: "{{ coolify_compose_files }}"
+    state: absent
+    remove_orphans: true
+    remove_volumes: false
+  tags: coolify, docker, stop

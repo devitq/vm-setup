@@ -1,0 +1,38 @@
+---
+- name: Ensure source directory exists
+  ansible.builtin.file:
+    path: "{{ coolify_base_dir }}/source"
+    state: directory
+    owner: "{{ coolify_owner }}"
+    group: "{{ coolify_group }}"
+    mode: "0750"
+  tags: coolify, configuration
+
+- name: Check if .env exists
+  ansible.builtin.stat:
+    path: "{{ coolify_base_dir }}/source/.env"
+  register: coolify_env_file
+  tags: coolify, configuration
+
+- name: Generate missing secrets (only for new install)
+  ansible.builtin.set_fact:
+    coolify_app_key: "{{ coolify_app_key | default(lookup('password', '/dev/null length=32 chars=ascii_letters,digits'), true) }}"
+    coolify_db_password: "{{ coolify_db_password | default(lookup('password', '/dev/null length=32 chars=ascii_letters,digits'), true) }}"
+    coolify_redis_password: "{{ coolify_redis_password | default(lookup('password', '/dev/null length=32 chars=ascii_letters,digits'), true) }}"
+    coolify_pusher_app_key: "{{ coolify_pusher_app_key | default(lookup('password', '/dev/null length=32 chars=ascii_letters,digits'), true) }}"
+    coolify_pusher_app_secret: "{{ coolify_pusher_app_secret | default(lookup('password', '/dev/null length=32 chars=ascii_letters,digits'), true) }}"
+    coolify_app_id: "{{ coolify_app_id | default(lookup('password', '/dev/null length=16 chars=ascii_letters,digits'), true) }}"
+    coolify_pusher_app_id: "{{ coolify_pusher_app_id | default(lookup('password', '/dev/null length=16 chars=ascii_letters,digits'), true) }}"
+  when: not coolify_env_file.stat.exists
+  tags: coolify, configuration
+
+- name: Configure .env file
+  ansible.builtin.template:
+    src: .env.j2
+    dest: "{{ coolify_base_dir }}/source/.env"
+    owner: "{{ coolify_owner }}"
+    group: "{{ coolify_group }}"
+    mode: "0640"
+    force: false
+  when: not coolify_env_file.stat.exists
+  tags: coolify, configuration
