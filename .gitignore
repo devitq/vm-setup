@@ -40,3 +40,6 @@ inventory/hosts
 
 # Unignore .gitkeep files
 !.gitkeep
+
+*.retry
+.ansible/
