@@ -6,6 +6,8 @@
   tags: monitoring
 
 - name: Manage Prometheus node exporter
+  when: monitoring_prometheus_node_exporter | bool
+  tags: monitoring, prometheus
   block:
     - name: Install Prometheus node exporter
       ansible.builtin.apt:
@@ -18,5 +20,3 @@
         name: prometheus-node-exporter
         state: started
         enabled: true
-  when: monitoring_prometheus_node_exporter | bool
-  tags: monitoring, prometheus
