@@ -1,6 +1,7 @@
 ---
 - name: Configure sysctl parameters
-  ansible.builtin.sysctl:
+  become: true
+  ansible.posix.sysctl:
     name: "{{ item.key }}"
     value: "{{ item.value }}"
     state: present
@@ -9,14 +10,16 @@
   tags: optimization
 
 - name: Configure file handle limits
+  become: true
   ansible.builtin.lineinfile:
     path: /etc/security/limits.conf
     regexp: "^{{ item.user | regex_escape }}.*{{ item.type }}"
     line: "{{ item.user }} - nofile {{ item.limit }}"
     create: true
+    mode: "0644"
   loop:
-    - {user: "root", type: "soft", limit: "65536"}
-    - {user: "root", type: "hard", limit: "65536"}
-    - {user: "*", type: "soft", limit: "65536"}
-    - {user: "*", type: "hard", limit: "65536"}
+    - { user: "root", type: "soft", limit: "65536" }
+    - { user: "root", type: "hard", limit: "65536" }
+    - { user: "*", type: "soft", limit: "65536" }
+    - { user: "*", type: "hard", limit: "65536" }
   tags: limits
