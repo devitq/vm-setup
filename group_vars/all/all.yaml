@@ -9,11 +9,10 @@ system_locale: en_US.UTF-8
 
 # Monitoring
 monitoring_enabled: true
-monitoring_prometheus_node_exporter: true
 
 # Logs
-journal_retention_days: 21
-journal_max_disk_limit: "5%"
+common_journal_retention_days: 21
+common_journal_max_disk_limit: "5%"
 
 # User management
 admin_users:
@@ -26,7 +25,7 @@ admin_users:
 # Containers management
 containers:
   docker:
-    enabled: false 
+    enabled: false
     state: absent
   k3s:
     enabled: false

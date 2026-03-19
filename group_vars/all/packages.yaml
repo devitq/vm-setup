@@ -29,13 +29,12 @@ system_packages:
     - gdb
     - gcc
     - cron
-    - just
     - bat
     - sqlite3
   monitoring:
     - htop
     - atop
-    - psmisc # pstree
+    - psmisc  # pstree
     - iotop
     - nethogs
     - nload
