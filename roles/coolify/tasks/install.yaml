@@ -1,5 +1,6 @@
 ---
 - name: Install prerequisites (apt)
+  become: true
   ansible.builtin.apt:
     name:
       - curl
@@ -10,13 +11,15 @@
   tags: coolify, prerequisites, installation
 
 - name: Ensure Docker service is started and enabled
+  become: true
   ansible.builtin.systemd:
     name: docker
     state: started
     enabled: true
   tags: coolify, docker, installation
 
-- name: Create Coolify directories
+- name: Create Coolify directory structure
+  become: true
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
@@ -35,40 +38,34 @@
     - "{{ coolify_base_dir }}/webhooks-during-maintenance"
   tags: coolify, files, installation
 
-- name: Download Coolify configuration files
-  ansible.builtin.get_url:
-    url: "https://cdn.coollabs.io/coolify/{{ item.file }}"
+- name: Deploy Coolify compose files from templates
+  become: true
+  ansible.builtin.template:
+    src: "{{ item.src }}"
     dest: "{{ coolify_base_dir }}/source/{{ item.dest }}"
-    mode: "0644"
     owner: "{{ coolify_owner }}"
     group: "{{ coolify_group }}"
+    mode: "0644"
   loop:
-    - { file: "docker-compose.yml", dest: "docker-compose.yml" }
-    - { file: "docker-compose.prod.yml", dest: "docker-compose.prod.yml" }
-    - { file: "upgrade.sh", dest: "upgrade.sh" }
+    - src: docker-compose.yml.j2
+      dest: docker-compose.yml
+    - src: docker-compose.prod.yml.j2
+      dest: docker-compose.prod.yml
+  loop_control:
+    label: "{{ item.dest }}"
   tags: coolify, files, installation
 
 - name: Configure Coolify environment
   ansible.builtin.include_tasks: configure.yaml
   tags: coolify, configuration, installation
 
-- name: Ensure correct ownership and permissions recursively
-  ansible.builtin.file:
-    path: "{{ coolify_base_dir }}"
-    owner: "{{ coolify_owner }}"
-    group: "{{ coolify_group }}"
-    mode: "0750"
-    recurse: true
-  tags: coolify, permissions, installation
-
-- name: Start Coolify
+- name: Start Coolify services
   ansible.builtin.include_tasks: start.yaml
   tags: coolify, start, installation
 
-- name: Show installed message
+- name: Show installation success message
   ansible.builtin.debug:
     msg:
       - "Coolify installed successfully"
-      - "All containers are healthy and responding"
-      - "Access at: http://{{ ansible_host }}:{{ coolify_http_port }}"
+      - "Access at: http://{{ ansible_host }}:{{ coolify_app_port }}"
   tags: coolify, installation

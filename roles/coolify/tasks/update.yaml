@@ -1,22 +1,27 @@
 ---
-- name: Update Coolify configuration files
-  ansible.builtin.get_url:
-    url: "https://cdn.coollabs.io/coolify/{{ item.file }}"
+- name: Deploy latest Coolify compose files from templates
+  become: true
+  ansible.builtin.template:
+    src: "{{ item.src }}"
     dest: "{{ coolify_base_dir }}/source/{{ item.dest }}"
-    mode: "0644"
     owner: "{{ coolify_owner }}"
     group: "{{ coolify_group }}"
+    mode: "0644"
   loop:
-    - { file: "docker-compose.yml", dest: "docker-compose.yml" }
-    - { file: "docker-compose.prod.yml", dest: "docker-compose.prod.yml" }
-    - { file: "upgrade.sh", dest: "upgrade.sh" }
+    - src: docker-compose.yml.j2
+      dest: docker-compose.yml
+    - src: docker-compose.prod.yml.j2
+      dest: docker-compose.prod.yml
+  loop_control:
+    label: "{{ item.dest }}"
+  register: _coolify_compose_updated
   tags: coolify, files, update
 
-- name: Ensure Coolify environment configuration exists
+- name: Ensure Coolify environment configuration is current
   ansible.builtin.include_tasks: configure.yaml
   tags: coolify, configuration, update
 
-- name: Update Coolify services (pull and recreate)
+- name: Pull latest Coolify images and recreate services
   become: true
   community.docker.docker_compose_v2:
     project_src: "{{ coolify_base_dir }}/source"
@@ -25,26 +30,25 @@
     state: present
     recreate: always
     wait: true
-    wait_timeout: 300
+    wait_timeout: "{{ coolify_compose_wait_timeout }}"
+  register: _coolify_update_result
   tags: coolify, docker, update
 
 - name: Wait for Coolify HTTP to respond after update
   ansible.builtin.uri:
-    url: "http://localhost:{{ coolify_http_port }}"
+    url: "http://localhost:{{ coolify_app_port }}"
     method: GET
     status_code: 200
     timeout: 30
-    body_format: json
-  register: coolify_health_after_update
-  until: coolify_health_after_update.status == 200
-  retries: 20
-  delay: 15
+  register: _coolify_health_after_update
+  until: _coolify_health_after_update.status == 200
+  retries: "{{ coolify_health_retries }}"
+  delay: "{{ coolify_health_delay }}"
   tags: coolify, update, health
 
-- name: Show update success message
+- name: Show update result
   ansible.builtin.debug:
     msg:
       - "Coolify updated successfully to latest version"
-      - "Services have been recreated with latest images and config"
-      - "Access at: http://{{ ansible_host }}:{{ coolify_http_port }}"
+      - "Access at: http://{{ ansible_host }}:{{ coolify_app_port }}"
   tags: coolify, update

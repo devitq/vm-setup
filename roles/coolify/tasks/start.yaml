@@ -1,24 +1,23 @@
 ---
-- name: Start Coolify services
+- name: Start Coolify services via Docker Compose
   become: true
   community.docker.docker_compose_v2:
     project_src: "{{ coolify_base_dir }}/source"
     files: "{{ coolify_compose_files }}"
-    pull: always
     state: present
+    pull: always
     wait: true
-    wait_timeout: 300
+    wait_timeout: "{{ coolify_compose_wait_timeout }}"
   tags: coolify, docker, start
 
 - name: Wait for Coolify HTTP to respond
   ansible.builtin.uri:
-    url: "http://localhost:{{ coolify_http_port }}"
+    url: "http://localhost:{{ coolify_app_port }}"
     method: GET
     status_code: 200
     timeout: 30
-    body_format: json
-  register: coolify_health
-  until: coolify_health.status == 200
-  retries: 10
-  delay: 10
+  register: _coolify_health
+  until: _coolify_health.status == 200
+  retries: "{{ coolify_health_retries }}"
+  delay: "{{ coolify_health_delay }}"
   tags: coolify, health, start
