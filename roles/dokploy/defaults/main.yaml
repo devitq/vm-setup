@@ -1,5 +1,5 @@
 ---
-dokploy_state: present  # present | absent | latest
+dokploy_state: present # present | absent | latest
 dokploy_remove_data_on_absent: false
 dokploy_update_all_services: true
 dokploy_config_dir: /etc/dokploy
@@ -13,7 +13,8 @@ dokploy_traefik_image: traefik:v3.6.1
 
 dokploy_postgres_user: dokploy
 dokploy_postgres_db: dokploy
-dokploy_postgres_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits length=32') }}"
+# Must be explicitly set per-host or in vault — left empty to fail loudly
+dokploy_postgres_password: ""
 
 dokploy_docker_network: dokploy-network
 

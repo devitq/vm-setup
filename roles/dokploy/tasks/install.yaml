@@ -2,7 +2,6 @@
 - name: Check if Docker is installed
   ansible.builtin.command:
     cmd: docker --version
-  ignore_errors: false
   changed_when: false
   tags: dokploy, docker, installation
 
@@ -17,35 +16,39 @@
   become: true
   community.docker.docker_swarm:
     state: absent
-  ignore_errors: true
+  register: _dokploy_swarm_leave
+  failed_when:
+    - _dokploy_swarm_leave is failed
+    - "'not part of a swarm' not in (_dokploy_swarm_leave.msg | default('') | lower)"
+    - "'not a swarm manager' not in (_dokploy_swarm_leave.msg | default('') | lower)"
   tags: dokploy, swarm, installation
 
 - name: Determine advertise address
+  tags: dokploy, network, installation
   block:
     - name: Get private IP address
       ansible.builtin.set_fact:
-        private_ip: "{{ ansible_default_ipv4.address }}"
+        dokploy_private_ip: "{{ ansible_default_ipv4.address }}"
       when: dokploy_advertise_addr == ""
 
     - name: Set advertise address
       ansible.builtin.set_fact:
-        effective_advertise_addr: "{{ dokploy_advertise_addr | default(private_ip) }}"
-  tags: dokploy, network, installation
+        dokploy_effective_advertise_addr: "{{ dokploy_advertise_addr | default(dokploy_private_ip) }}"
 
 - name: Validate advertise address
   ansible.builtin.assert:
     that:
-      - effective_advertise_addr is defined
-      - effective_advertise_addr != ""
-    msg: "Could not determine advertise address. Please set dokploy_advertise_addr variable."
+      - dokploy_effective_advertise_addr is defined
+      - dokploy_effective_advertise_addr != ""
+    fail_msg: "Could not determine advertise address. Please set dokploy_advertise_addr variable."
   tags: dokploy, network, installation
 
 - name: Initialize Docker Swarm
   become: true
   community.docker.docker_swarm:
     state: present
-    advertise_addr: "{{ effective_advertise_addr }}"
-    listen_addr: "{{ effective_advertise_addr }}"
+    advertise_addr: "{{ dokploy_effective_advertise_addr }}"
+    listen_addr: "{{ dokploy_effective_advertise_addr }}"
   tags: dokploy, swarm, installation
 
 - name: Create dokploy overlay network
@@ -61,7 +64,7 @@
   ansible.builtin.file:
     path: "{{ dokploy_config_dir }}"
     state: directory
-    mode: "0777"
+    mode: "0755"
   tags: dokploy, files, installation
 
 - name: Pull all service images (when update all services requested)
@@ -188,7 +191,7 @@
       constraints:
         - "node.role=={{ dokploy_constraint_node_role }}"
     env:
-      ADVERTISE_ADDR: "{{ effective_advertise_addr }}"
+      ADVERTISE_ADDR: "{{ dokploy_effective_advertise_addr }}"
       DATABASE_URL: "postgres://{{ dokploy_postgres_user }}:{{ dokploy_postgres_password }}@dokploy-postgres:5432/{{ dokploy_postgres_db }}"
     state: present
   tags: dokploy, main, installation
@@ -268,6 +271,6 @@
   ansible.builtin.debug:
     msg:
       - "Dokploy installed successfully"
-      - "Using advertise address: {{ effective_advertise_addr }}"
+      - "Using advertise address: {{ dokploy_effective_advertise_addr }}"
       - "Access at: http://{{ ansible_host }}:{{ dokploy_http_port }}"
   tags: dokploy, installation

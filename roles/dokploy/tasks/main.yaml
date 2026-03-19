@@ -3,7 +3,18 @@
   ansible.builtin.assert:
     that:
       - dokploy_state in ['present', 'absent', 'latest']
-    msg: "dokploy_state must be one of: present, absent, latest"
+    fail_msg: "dokploy_state must be one of: present, absent, latest"
+  tags: always
+
+- name: Validate dokploy_postgres_password is set
+  ansible.builtin.assert:
+    that:
+      - dokploy_postgres_password | default('', true) | length > 0
+    fail_msg: >-
+      dokploy_postgres_password must be explicitly set per-host or in vault.
+      It cannot be left empty.
+    quiet: true
+  when: dokploy_state in ['present', 'latest']
   tags: always
 
 - name: Check if Dokploy services exist
@@ -11,7 +22,7 @@
   community.docker.docker_swarm_service_info:
     name: dokploy
   register: dokploy_services
-  ignore_errors: true
+  failed_when: false
   tags: always
 
 - name: Include deletion tasks if state is absent
