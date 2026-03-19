@@ -3,7 +3,6 @@
   hosts: servers
   gather_facts: true
   become: true
-  serial: "100%"
 
   pre_tasks:
     - name: Update apt cache and upgrade system
@@ -21,6 +20,7 @@
       tags: system, updates
 
     - name: Check system requirements
+      tags: validation
       block:
         - name: Verify Python 3 is available
           ansible.builtin.command: which python3
@@ -33,7 +33,6 @@
             filter: ansible_memtotal_mb
           register: memory_info
           failed_when: memory_info.ansible_facts.ansible_memtotal_mb < 512
-      tags: validation
 
   roles:
     - role: common
@@ -56,11 +55,11 @@
           Architecture: {{ ansible_architecture }}
           Memory: {{ ansible_memtotal_mb }}MB
           CPUs: {{ ansible_processor_vcpus }}
-          Storage: {{ ansible_devices.vda.size if ansible_devices.vda is defined 
-                    else (ansible_devices.sda.size if ansible_devices.sda is defined 
+          Storage: {{ ansible_devices.vda.size if ansible_devices.vda is defined
+                    else (ansible_devices.sda.size if ansible_devices.sda is defined
                     else 'N/A') }}
       tags: always, info
-    
+
     - name: Check if a reboot is required after updates
       ansible.builtin.stat:
         path: /var/run/reboot-required
@@ -77,15 +76,4 @@
         test_command: uptime
       when: reboot_required_file.stat.exists
       register: reboot_result
-      async: 600
-      poll: 0
-      tags: system
-
-    - name: Wait for reboot to complete
-      ansible.builtin.wait_for_connection:
-        connect_timeout: 20
-        sleep: 5
-        delay: 5
-        timeout: 600
-      when: reboot_required_file.stat.exists
       tags: system
