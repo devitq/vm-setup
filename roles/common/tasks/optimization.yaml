@@ -23,3 +23,22 @@
     - { user: "*", type: "soft", limit: "65536" }
     - { user: "*", type: "hard", limit: "65536" }
   tags: limits
+
+- name: Deploy GPU unbind systemd units
+  become: true
+  ansible.builtin.template:
+    src: gpu-unbind.service.j2
+    dest: /etc/systemd/system/gpu-unbind-{{ item.label }}.service
+    mode: "0644"
+  loop: "{{ gpu_unbind_devices }}"
+  notify: Reload systemd
+  tags: optimization
+
+- name: Enable and start GPU unbind servie
+  become: true
+  ansible.builtin.systemd:
+    name: gpu-unbind-{{ item.label }}
+    enabled: true
+    state: started
+  loop: "{{ gpu_unbind_devices }}"
+  tags: optimization
