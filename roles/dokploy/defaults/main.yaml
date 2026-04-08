@@ -9,7 +9,7 @@ dokploy_advertise_addr: ""
 dokploy_postgres_image: postgres:16-alpine
 dokploy_redis_image: redis:8-alpine
 dokploy_dokploy_image: dokploy/dokploy:latest
-dokploy_traefik_image: traefik:v3.6.1
+dokploy_traefik_image: traefik:v3.6
 
 dokploy_postgres_user: dokploy
 dokploy_postgres_db: dokploy

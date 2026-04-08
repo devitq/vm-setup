@@ -3,7 +3,7 @@ docker_edition: "ce"
 docker_install_compose_plugin: true
 docker_users:
   - "{{ ansible_user }}"
-docker_daemon_options:
+_docker_daemon_options_base:
   debug: false
   init: false
   live-restore: true
@@ -96,3 +96,4 @@ docker_daemon_options:
   labels: []
 
   exec-opts: []
+docker_daemon_options: "{{ _docker_daemon_options_base | combine(docker_daemon_options_host | default({}), recursive=True) }}"

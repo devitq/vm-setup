@@ -14,6 +14,7 @@
     - _dokploy_remove_services is failed
     - "'could not find' not in (_dokploy_remove_services.msg | default('') | lower)"
     - "'not found' not in (_dokploy_remove_services.msg | default('') | lower)"
+    - "'not a swarm manager' not in (_dokploy_remove_services.msg | default('') | lower)"
   tags: dokploy, deletion
 
 - name: Leave Docker Swarm
