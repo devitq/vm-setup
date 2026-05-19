@@ -13,6 +13,7 @@ monitoring_enabled: true
 # Logs
 common_journal_retention_days: 21
 common_journal_max_disk_limit: "5%"
+common_atop_retention_days: 3
 
 # User management
 admin_users:
