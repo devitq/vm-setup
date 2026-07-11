@@ -6,6 +6,14 @@
   serial: 1
 
   roles:
+    - role: borgbase.ansible_role_borgbackup
+      when: applications.borgbackup.enabled | bool
+      tags: borgbackup, apps
+
+    - role: artis3n.tailscale.machine
+      when: applications.tailscale.enabled | bool
+      tags: tailscale, apps
+
     - role: dokploy
       when: (applications.dokploy.enabled and containers.docker.enabled) | bool
       vars:
@@ -17,11 +25,3 @@
       vars:
         coolify_state: "{{ applications.coolify.state | default('present') }}"
       tags: coolify, apps
-
-    - role: artis3n.tailscale.machine
-      when: applications.tailscale.enabled | bool
-      tags: tailscale, apps
-
-    - role: borgbase.ansible_role_borgbackup
-      when: applications.borgbackup.enabled | bool
-      tags: borgbackup, apps
