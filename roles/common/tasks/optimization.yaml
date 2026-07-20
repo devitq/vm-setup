@@ -1,10 +1,19 @@
 ---
+- name: Ensure tcp_bbr module is loaded and persistent
+  become: true
+  community.general.modprobe:
+    name: tcp_bbr
+    state: present
+    persistent: present
+  tags: optimization
+
 - name: Configure sysctl parameters
   become: true
   ansible.posix.sysctl:
     name: "{{ item.key }}"
     value: "{{ item.value }}"
     state: present
+    sysctl_set: true
     reload: true
   loop: "{{ sysctl_tuning | dict2items }}"
   tags: optimization
