@@ -14,6 +14,10 @@
       when: applications.tailscale.enabled | bool
       tags: tailscale, apps
 
+    - role: salt
+      when: applications.salt.enabled | bool
+      tags: salt, apps
+
     - role: dokploy
       when: (applications.dokploy.enabled and containers.docker.enabled) | bool
       vars:

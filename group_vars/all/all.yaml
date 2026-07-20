@@ -34,13 +34,15 @@ containers:
 
 # Applications management
 applications:
+  borgbackup:
+    enabled: false
+  tailscale:
+    enabled: false
+  salt:
+    enabled: false
   coolify:
     enabled: false
     state: latest
   dokploy:
     enabled: false
     state: latest
-  tailscale:
-    enabled: false
-  borgbackup:
-    enabled: false
