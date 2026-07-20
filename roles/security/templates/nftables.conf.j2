@@ -198,12 +198,14 @@ table inet ansible_filter {
 {% if dnat_rules | length > 0 %}
         # Accept forwarded traffic for DNAT destinations (needed if forward policy != accept)
 {% for rule in dnat_rules %}
+{% if rule.redirect is not defined %}
 {% set proto = rule.proto | default('tcp') %}
 {% set comment = ' comment "DNAT fwd: ' + rule.comment + '"' if rule.comment is defined else '' %}
 {% set dest_parts = rule.dest.split(':') %}
 {% set dest_ip = dest_parts[0] %}
 {% set dest_port = dest_parts[1] if dest_parts | length > 1 else rule.port | string %}
         ip daddr {{ dest_ip }} {{ proto }} dport {{ dest_port }} accept{{ comment }}
+{% endif %}
 {% endfor %}
 {% endif %}
 
@@ -247,7 +249,11 @@ table ip ansible_nat {
 {% set _ = dnat_match.append('ip saddr ' + rule.source) %}
 {% endif %}
 {% set _ = dnat_match.append(proto + ' dport ' + rule.port | string) %}
+{% if rule.redirect is defined %}
+        {{ dnat_match | join(' ') }} redirect to :{{ rule.redirect }}{{ comment }}
+{% else %}
         {{ dnat_match | join(' ') }} dnat to {{ rule.dest }}{{ comment }}
+{% endif %}
 {% endfor %}
     }
 
