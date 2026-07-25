@@ -248,6 +248,9 @@ table ip ansible_nat {
 {% if rule.source is defined %}
 {% set _ = dnat_match.append('ip saddr ' + rule.source) %}
 {% endif %}
+{% if rule.destination is defined %}
+{% set _ = dnat_match.append('ip daddr ' + rule.destination) %}
+{% endif %}
 {% set _ = dnat_match.append(proto + ' dport ' + rule.port | string) %}
 {% if rule.redirect is defined %}
         {{ dnat_match | join(' ') }} redirect to :{{ rule.redirect }}{{ comment }}
