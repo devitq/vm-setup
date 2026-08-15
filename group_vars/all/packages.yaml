@@ -32,6 +32,7 @@ system_packages:
     - bat
     - sqlite3
     - python3-docker
+    - acpi
   monitoring:
     - htop
     - atop
