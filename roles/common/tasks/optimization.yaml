@@ -43,11 +43,21 @@
   notify: Reload systemd
   tags: optimization
 
-- name: Enable and start GPU unbind servie
+- name: Enable and start GPU unbind service
   become: true
   ansible.builtin.systemd:
     name: gpu-unbind-{{ item.label }}
     enabled: true
     state: started
   loop: "{{ gpu_unbind_devices }}"
+  tags: optimization
+
+- name: NIC offloads
+  when: enable_nic_offloads | bool
+  become: true
+  ansible.builtin.template:
+    src: nic-offloads.j2
+    dest: /etc/network/if-up.d/{{ ansible_default_ipv4.interface }}
+    mode: "0755"
+  notify: Restart networking
   tags: optimization
