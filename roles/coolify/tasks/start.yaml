@@ -8,6 +8,7 @@
     pull: always
     wait: true
     wait_timeout: "{{ coolify_compose_wait_timeout }}"
+    remove_orphans: true
   tags: coolify, docker, start
 
 - name: Wait for Coolify HTTP to respond
