@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -u
+
+docker info >/dev/null 2>&1 || exit 0
+containers=$(timeout 10s docker ps --format '{% raw %}{{.Names}} {{.Image}}{% endraw %}') || exit 0
+state_dir=/run/coolify-proxy-watchdog
+mkdir -p "$state_dir"
+
+while read -r container image; do
+  case "$container:$image" in
+    coolify-proxy:*|*traefik*) ;;
+    *) continue ;;
+  esac
+
+  now=$(date +%s)
+  state_file="$state_dir/$container"
+  last_restart=$(cat "$state_file" 2>/dev/null || true)
+  if [[ "$last_restart" =~ ^[0-9]+$ ]] && (( now - last_restart < 300 )); then
+    continue
+  fi
+
+  started_at=$(timeout 10s docker inspect --format '{% raw %}{{.State.StartedAt}}{% endraw %}' "$container") || continue
+  started_epoch=$(date -d "$started_at" +%s) || continue
+  if (( started_epoch > now - 120 )); then
+    since="$started_at"
+  else
+    since=2m
+  fi
+
+  logs=$(timeout 15s docker logs --since "$since" --tail 500 "$container" 2>&1) || continue
+  if printf '%s\n' "$logs" | grep -Ei 'docker\.sock|docker\.socket' | grep -Eiq 'connection refused|cannot connect|no such file or directory|connection reset|i/o timeout|context deadline exceeded'; then
+    printf '%s\n' "$now" > "$state_file"
+    if docker restart --time 10 "$container" >/dev/null; then
+      echo "Restarted $container after Docker socket connection failure"
+    else
+      echo "Failed to restart $container after Docker socket connection failure" >&2
+    fi
+  fi
+done <<< "$containers"

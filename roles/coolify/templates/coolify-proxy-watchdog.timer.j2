@@ -1,0 +1,10 @@
+[Unit]
+Description=Check Traefik Docker socket connections
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+Unit=coolify-proxy-watchdog.service
+
+[Install]
+WantedBy=timers.target

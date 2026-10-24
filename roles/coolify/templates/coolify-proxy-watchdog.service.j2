@@ -1,0 +1,8 @@
+[Unit]
+Description=Recover Traefik proxies after Docker socket connection failures
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/coolify-proxy-watchdog
+TimeoutStartSec=45s

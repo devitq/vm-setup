@@ -1,0 +1,29 @@
+---
+- name: Deploy Coolify proxy watchdog script
+  become: true
+  ansible.builtin.template:
+    src: proxy-watchdog.sh.j2
+    dest: /usr/local/sbin/coolify-proxy-watchdog
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Deploy Coolify proxy watchdog units
+  become: true
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - coolify-proxy-watchdog.service
+    - coolify-proxy-watchdog.timer
+
+- name: Enable Coolify proxy watchdog timer
+  become: true
+  ansible.builtin.systemd:
+    name: coolify-proxy-watchdog.timer
+    daemon_reload: true
+    enabled: true
+    state: started

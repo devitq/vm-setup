@@ -13,6 +13,11 @@
   ansible.builtin.include_tasks: detect.yaml
   tags: always
 
+- name: Disable Coolify proxy watchdog
+  ansible.builtin.include_tasks: watchdog_disable.yaml
+  when: coolify_state in ['absent', 'stopped']
+  tags: coolify, proxy
+
 - name: Uninstall Coolify
   ansible.builtin.include_tasks: delete.yaml
   when: coolify_state == 'absent'
@@ -59,6 +64,11 @@
 
     - name: Ensure services are running
       ansible.builtin.include_tasks: start.yaml
+
+- name: Configure Coolify proxy watchdog
+  ansible.builtin.include_tasks: watchdog.yaml
+  when: coolify_state in ['present', 'latest']
+  tags: coolify, proxy
 
 - name: Show Coolify status
   ansible.builtin.debug:

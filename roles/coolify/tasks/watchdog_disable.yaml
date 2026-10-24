@@ -1,0 +1,34 @@
+---
+- name: Check for Coolify proxy watchdog timer
+  become: true
+  ansible.builtin.stat:
+    path: /etc/systemd/system/coolify-proxy-watchdog.timer
+  register: _coolify_watchdog_timer
+
+- name: Disable Coolify proxy watchdog timer
+  become: true
+  ansible.builtin.systemd:
+    name: coolify-proxy-watchdog.timer
+    enabled: false
+    state: stopped
+  when: _coolify_watchdog_timer.stat.exists
+
+- name: Remove Coolify proxy watchdog files
+  become: true
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /usr/local/sbin/coolify-proxy-watchdog
+    - /etc/systemd/system/coolify-proxy-watchdog.service
+    - /etc/systemd/system/coolify-proxy-watchdog.timer
+  register: _coolify_watchdog_removed
+  when: coolify_state == 'absent'
+
+- name: Reload systemd after removing Coolify proxy watchdog
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when:
+    - coolify_state == 'absent'
+    - _coolify_watchdog_removed is changed
