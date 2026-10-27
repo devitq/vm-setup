@@ -12,6 +12,35 @@
     cache_valid_time: 3600
   tags: packages
 
+- name: Install PMC cloud tools
+  become: true
+  when: pmc_cloud_tools_enabled | default(false) | bool
+  tags: packages
+  block:
+    - name: Install perf for PMC cloud tools
+      ansible.builtin.apt:
+        name: linux-perf
+        state: present
+
+    - name: Clone PMC cloud tools
+      ansible.builtin.git:
+        repo: "{{ pmc_cloud_tools_repo }}"
+        dest: /opt/pmc-cloud-tools
+        version: master
+
+    - name: Link PMC cloud tools into PATH
+      ansible.builtin.file:
+        src: "/opt/pmc-cloud-tools/{{ item }}"
+        dest: "/usr/local/bin/{{ item }}"
+        state: link
+      loop:
+        - cpucache
+        - icache
+        - pmcarch
+        - pmcipc
+        - resstalls
+        - tlbstat
+
 - name: Set hostname and FQDN
   tags: system
   block:

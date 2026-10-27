@@ -1,4 +1,8 @@
 ---
+# Install Brendan Gregg's PMC tools
+pmc_cloud_tools_enabled: false
+pmc_cloud_tools_repo: https://git.itqdev.xyz/Infrastructure/pmc-cloud-tools.git
+
 system_packages:
   essential:
     - curl
