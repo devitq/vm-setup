@@ -1,4 +1,11 @@
 ---
+debian_apt_mirror: https://deb.debian.org/debian
+debian_apt_security_mirror: https://deb.debian.org/debian-security
+debian_apt_components:
+  - main
+  - contrib
+debian_apt_backports_enabled: false
+
 # Install Brendan Gregg's PMC tools
 pmc_cloud_tools_enabled: false
 pmc_cloud_tools_repo: https://git.itqdev.xyz/Infrastructure/pmc-cloud-tools.git

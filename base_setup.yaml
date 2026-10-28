@@ -5,6 +5,12 @@
   become: true
 
   pre_tasks:
+    - name: Configure Debian package repositories
+      ansible.builtin.import_role:
+        name: common
+        tasks_from: repositories
+      tags: system, updates, repositories
+
     - name: Update apt cache and upgrade system
       ansible.builtin.apt:
         update_cache: true

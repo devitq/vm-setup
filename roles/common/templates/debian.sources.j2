@@ -1,0 +1,20 @@
+# Managed by Ansible
+Types: deb
+URIs: {{ debian_apt_mirror }}
+Suites: {{ ansible_distribution_release }} {{ ansible_distribution_release }}-updates
+Components: {{ debian_apt_components | join(' ') }}
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+URIs: {{ debian_apt_security_mirror }}
+Suites: {{ ansible_distribution_release }}-security
+Components: {{ debian_apt_components | join(' ') }}
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+{% if debian_apt_backports_enabled | bool %}
+
+Types: deb
+URIs: {{ debian_apt_mirror }}
+Suites: {{ ansible_distribution_release }}-backports
+Components: {{ debian_apt_components | join(' ') }}
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+{% endif %}

@@ -1,0 +1,36 @@
+---
+- name: Verify the host is Debian
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == 'Debian'
+      - ansible_distribution_release | length > 0
+    fail_msg: Debian APT repository configuration requires a Debian host with a release codename.
+
+- name: Check for legacy APT sources list
+  ansible.builtin.stat:
+    path: /etc/apt/sources.list
+  register: common_debian_apt_legacy_sources
+
+- name: Disable official Debian entries in legacy sources list
+  ansible.builtin.replace:
+    path: /etc/apt/sources.list
+    regexp: '^((?:deb|deb-src)\s+(?:\[[^]]+\]\s+)?https?://(?:deb\.debian\.org/debian(?:-security)?|security\.debian\.org/debian-security|ftp\.debian\.org/debian(?:-security)?)\s+.*)$'
+    replace: '# Managed in /etc/apt/sources.list.d/debian.sources: \1'
+    backup: true
+  when: common_debian_apt_legacy_sources.stat.exists
+  register: common_debian_apt_legacy_changed
+
+- name: Configure Debian APT sources
+  ansible.builtin.template:
+    src: debian.sources.j2
+    dest: /etc/apt/sources.list.d/debian.sources
+    owner: root
+    group: root
+    mode: '0644'
+    backup: true
+  register: common_debian_apt_sources_changed
+
+- name: Refresh APT cache when repositories change
+  ansible.builtin.apt:
+    update_cache: true
+  when: common_debian_apt_legacy_changed.changed or common_debian_apt_sources_changed.changed
