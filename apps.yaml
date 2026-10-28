@@ -21,7 +21,11 @@
       tags: borgbackup, apps
 
     - role: artis3n.tailscale.machine
-      when: applications.tailscale.enabled | bool
+      when: >-
+        (applications.tailscale.enabled or
+        applications.tailscale.state | default('latest') == 'absent') | bool
+      vars:
+        state: "{{ applications.tailscale.state | default('latest') }}"
       tags: tailscale, apps
 
     - role: salt
