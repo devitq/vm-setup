@@ -24,6 +24,7 @@ _docker_daemon_options_base:
 
   ipv6: true
   ip-forward: true
+  firewall-backend: nftables
   iptables: true
   ip6tables: true
   ip-masq: false
