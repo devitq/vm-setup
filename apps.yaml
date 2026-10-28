@@ -6,7 +6,7 @@
 
   roles:
     - role: githubixx.ansible_role_wireguard
-      when: applications.wireguard.enabled | bool
+      when: applications.wireguard.enabled | default(false) | bool
       tags: wireguard, apps
 
 - name: Application Deployment
@@ -16,28 +16,32 @@
   serial: 1
 
   roles:
+    - role: robertdebock.dnsmasq
+      when: applications.dnsmasq.enabled | default(false) | bool
+      tags: dnsmasq, apps
+
     - role: borgbase.ansible_role_borgbackup
-      when: applications.borgbackup.enabled | bool
+      when: applications.borgbackup.enabled | default(false) | bool
       tags: borgbackup, apps
 
     - role: artis3n.tailscale.machine
-      when: applications.tailscale.enabled | bool
+      when: applications.tailscale.enabled | default(false) | bool
       vars:
         state: "{{ applications.tailscale.state | default('latest') }}"
       tags: tailscale, apps
 
     - role: salt
-      when: applications.salt.enabled | bool
+      when: applications.salt.enabled | default(false) | bool
       tags: salt, apps
 
     - role: dokploy
-      when: (applications.dokploy.enabled and containers.docker.enabled) | bool
+      when: (applications.dokploy.enabled | default(false) and containers.docker.enabled | default(false)) | bool
       vars:
         dokploy_state: "{{ applications.dokploy.state | default('present') }}"
       tags: dokploy, apps
 
     - role: coolify
-      when: (applications.coolify.enabled and containers.docker.enabled) | bool
+      when: (applications.coolify.enabled | default(false) and containers.docker.enabled | default(false)) | bool
       vars:
         coolify_state: "{{ applications.coolify.state | default('present') }}"
       tags: coolify, apps

@@ -26,3 +26,5 @@ roles:
   - src: https://github.com/githubixx/ansible-role-wireguard.git
     name: githubixx.ansible_role_wireguard
     version: 19.0.0
+  - src: robertdebock.dnsmasq
+    version: 2.2.0
