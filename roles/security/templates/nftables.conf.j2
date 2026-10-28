@@ -24,6 +24,7 @@
 {% set blocked_ips = security_nftables_blocked_ips | default([]) %}
 {% set trusted_ips = security_nftables_trusted_ips | default([]) %}
 {% set allowed_port_ranges = security_nftables_allowed_port_ranges | default([]) %}
+{% set chain_priorities = security_nftables_chain_priorities | default({}) %}
 
 {% set blocked_v4 = blocked_ips | select('match', '.*\\..*') | list %}
 {% set blocked_v6 = blocked_ips | reject('match', '.*\\..*') | list %}
@@ -91,7 +92,7 @@ table inet ansible_filter {
 
 {% endif %}
     chain input {
-        type filter hook input priority filter; policy {{ default_policy }};
+        type filter hook input priority {{ chain_priorities.input | default('filter') }}; policy {{ default_policy }};
 
         # Conntrack: allow established, drop invalid
         ct state established,related accept
@@ -182,7 +183,7 @@ table inet ansible_filter {
     }
 
     chain forward {
-        type filter hook forward priority filter; policy {{ forward_policy }};
+        type filter hook forward priority {{ chain_priorities.forward | default('filter') }}; policy {{ forward_policy }};
 
         # Conntrack
         ct state established,related accept
@@ -218,7 +219,7 @@ table inet ansible_filter {
     }
 
     chain output {
-        type filter hook output priority filter; policy {{ output_policy }};
+        type filter hook output priority {{ chain_priorities.output | default('filter') }}; policy {{ output_policy }};
 
         ct state established,related accept
 
@@ -236,7 +237,7 @@ table ip ansible_nat {
 
 {% if dnat_rules | length > 0 %}
     chain prerouting {
-        type nat hook prerouting priority dstnat; policy accept;
+        type nat hook prerouting priority {{ chain_priorities.prerouting | default('dstnat') }}; policy accept;
 
 {% for rule in dnat_rules %}
 {% set proto = rule.proto | default('tcp') %}
@@ -263,7 +264,7 @@ table ip ansible_nat {
 {% endif %}
 {% if snat_rules | length > 0 or masquerade_interfaces | length > 0 %}
     chain postrouting {
-        type nat hook postrouting priority srcnat; policy accept;
+        type nat hook postrouting priority {{ chain_priorities.postrouting | default('srcnat') }}; policy accept;
 
 {% for rule in snat_rules %}
 {% set comment = ' comment "' + rule.comment + '"' if rule.comment is defined else '' %}
