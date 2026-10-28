@@ -62,6 +62,7 @@ system_packages:
     - mtr
     - ngrep
     - tcpflow
+    - pwru
   security:
     - auditd
     - fail2ban
