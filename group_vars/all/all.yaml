@@ -41,6 +41,8 @@ applications:
     enabled: false
   tailscale:
     enabled: false
+  wireguard:
+    enabled: false
   salt:
     enabled: false
   coolify:
