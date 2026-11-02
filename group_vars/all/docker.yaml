@@ -36,11 +36,9 @@ _docker_daemon_options_base:
   default-network-opts: {}
 
   dns:
-    - "100.100.100.100"
     - "1.1.1.1"
     - "8.8.8.8"
-  dns-search:
-    - "headnet.itqdev.xyz"
+  dns-search: []
   dns-opts: []
 
   storage-driver: "overlay2"
